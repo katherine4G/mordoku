@@ -1,0 +1,20 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Entornos virtuales
+.venv/
+venv/
+env/
+ENV/
+
+# Archivos del sistema
+.DS_Store       # Común en macOS (útil si compartes el código)
+Thumbs.db       # Común en Windows
+
+# IDEs (muy importante si usas VS Code o PyCharm)
+.vscode/
+.idea/
+*.swp
+*.swo
