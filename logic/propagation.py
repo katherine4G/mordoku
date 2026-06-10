@@ -12,7 +12,7 @@ def build_initial_domains(puzzle: Puzzle, engine: ConstraintEngine) -> Domains:
     for character_initial in puzzle.characters:
         initial_domains[character_initial] = {
             candidate_coordinate
-            for candidate_coordinate in puzzle.all_cells()
+            for candidate_coordinate in puzzle.occupiable_cells()
             if engine.person_constraint_ok(character_initial, candidate_coordinate, {})
         }
     return initial_domains

@@ -18,9 +18,14 @@ class ConstraintEngine:
         target_coordinate: Coord,
         current_assignment: Assignment,
     ) -> bool:
+        if target_coordinate in self.puzzle.blocked_cells:
+            return False
+
         character = self.puzzle.characters[character_initial]
         character_rule = character.rule
 
+        if character_rule == "with_elyse_living_room":
+            return self.puzzle.room_at(target_coordinate) == "living_room"
         if character_rule == "inside_car":
             return self.puzzle.feature_at(target_coordinate, "car")
         if character_rule == "on_oil":
@@ -33,6 +38,22 @@ class ConstraintEngine:
             return self.puzzle.feature_at(target_coordinate, "bed")
         if character_rule == "in_kitchen":
             return self.puzzle.room_at(target_coordinate) == "kitchen"
+        if character_rule == "in_shed":
+            return self.puzzle.room_at(target_coordinate) == "shed"
+        if character_rule == "beside_tree":
+            return self._beside_feature_in_same_room(target_coordinate, "tree")
+        if character_rule == "bedroom_or_sunroom":
+            return self.puzzle.room_at(target_coordinate) in {"bedroom", "sunroom"}
+        if character_rule == "on_carpet":
+            return self.puzzle.feature_at(target_coordinate, "carpet")
+        if character_rule == "in_garden":
+            return self.puzzle.room_at(target_coordinate) == "garden"
+        if character_rule == "alone":
+            return self._character_is_alone_in_room(
+                character_initial,
+                target_coordinate,
+                current_assignment,
+            )
         if character_rule == "alone_waiting_room":
             return self._diane_is_alone(target_coordinate, current_assignment)
         if character_rule == "beside_shelf":
@@ -48,6 +69,8 @@ class ConstraintEngine:
             return False
         if not self._exclusive_feature_rules_ok(current_assignment):
             return False
+        if not self._with_elyse_living_room_rule_ok(current_assignment):
+            return False
 
         for character_initial, assigned_coordinate in current_assignment.items():
             if not self.person_constraint_ok(
@@ -58,6 +81,26 @@ class ConstraintEngine:
                 return False
 
         return self._victim_murderer_rule_ok(current_assignment)
+
+    def _with_elyse_living_room_rule_ok(self, current_assignment: Assignment) -> bool:
+        linked_initials = {
+            character_initial
+            for character_initial, character in self.puzzle.characters.items()
+            if character.rule == "with_elyse_living_room"
+        }
+        if not linked_initials:
+            return True
+
+        required_living_room_initials = set(linked_initials)
+        if "E" in self.puzzle.characters:
+            required_living_room_initials.add("E")
+
+        for character_initial in required_living_room_initials:
+            if character_initial not in current_assignment:
+                continue
+            if self.puzzle.room_at(current_assignment[character_initial]) != "living_room":
+                return False
+        return True
 
     def _rows_and_columns_are_unique(self, current_assignment: Assignment) -> bool:
         occupied_rows: set[int] = set()
@@ -85,6 +128,23 @@ class ConstraintEngine:
                 other_character_initial != "D"
                 and self.puzzle.room_at(other_coordinate) == "waiting_room"
             ):
+                return False
+        return True
+
+    def _character_is_alone_in_room(
+        self,
+        character_initial: str,
+        target_coordinate: Coord,
+        current_assignment: Assignment,
+    ) -> bool:
+        target_room = self.puzzle.room_at(target_coordinate)
+        if target_room is None:
+            return False
+
+        for other_character_initial, other_coordinate in current_assignment.items():
+            if other_character_initial == character_initial:
+                continue
+            if self.puzzle.room_at(other_coordinate) == target_room:
                 return False
         return True
 

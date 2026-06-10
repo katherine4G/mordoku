@@ -7,12 +7,19 @@ from logic.solver import CSPSolver
 
 
 RULE_HINTS_BY_RULE = {
+    "with_elyse_living_room": "{name} debe estar con Elyse en la sala de estar.",
     "inside_car": "{name} necesita una casilla con carro.",
     "on_oil": "{name} debe estar sobre una mancha de aceite.",
     "inside_chair": "{name} necesita una silla.",
     "only_chair": "{name} debe estar en una silla, y nadie mas puede usar silla.",
     "on_bed": "{name} debe estar sobre una cama.",
     "in_kitchen": "{name} debe estar en la cocina.",
+    "in_shed": "{name} debe estar en el cobertizo.",
+    "beside_tree": "{name} debe estar junto a un arbol.",
+    "bedroom_or_sunroom": "{name} debe estar en el dormitorio o en el solario.",
+    "on_carpet": "{name} debe estar sobre una alfombra.",
+    "in_garden": "{name} debe estar en el jardin.",
+    "alone": "{name} debe estar solo en su area.",
     "alone_waiting_room": "{name} debe quedar sola en la sala de espera.",
     "beside_shelf": "{name} debe estar junto a un estante. Recuerda que no incluye diagonales.",
     "beside_tv": "{name} debe estar junto al televisor. Recuerda que no incluye diagonales.",
@@ -28,6 +35,9 @@ def hint_for_move(
     target_coordinate: Coord,
 ) -> str:
     engine = ConstraintEngine(puzzle)
+
+    if target_coordinate in puzzle.blocked_cells:
+        return "Esa casilla no se puede ocupar."
 
     for other_character_initial, other_coordinate in current_assignment.items():
         if other_coordinate == target_coordinate:

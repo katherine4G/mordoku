@@ -1,7 +1,7 @@
 # data/puzzles.py
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from pathlib import Path
 
 Coord = tuple[int, int]
@@ -26,6 +26,7 @@ class Puzzle:
     solution: dict[str, Coord]
     victim: str
     murderer: str
+    blocked_cells: set[Coord] = field(default_factory=set)
 
     def all_cells(self) -> set[Coord]:
         return {
@@ -42,6 +43,9 @@ class Puzzle:
 
     def feature_at(self, board_coordinate: Coord, feature_name: str) -> bool:
         return board_coordinate in self.features.get(feature_name, set())
+
+    def occupiable_cells(self) -> set[Coord]:
+        return self.all_cells() - self.blocked_cells
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -198,4 +202,212 @@ LEVEL_2 = Puzzle(
     murderer="B",
 )
 
-PUZZLES = [LEVEL_1, LEVEL_2]
+LEVEL_3 = Puzzle(
+    title="Caso 3: The Backyard Garden",
+    size=9,
+    image_path=ROOT / "assets" / "images" / "mordoku_nivel3.png",
+    characters={
+        "A": Character(
+            "A",
+            "Aaron",
+            "Con Elyse en la sala de estar.",
+            "with_elyse_living_room",
+        ),
+        "B": Character("B", "Bruce", "En el cobertizo.", "in_shed"),
+        "C": Character("C", "Carissa", "Junto a un arbol.", "beside_tree"),
+        "D": Character(
+            "D",
+            "Denise",
+            "En el dormitorio o en el solario.",
+            "bedroom_or_sunroom",
+        ),
+        "E": Character("E", "Elyse", "Sentada en una silla.", "inside_chair"),
+        "F": Character("F", "Franklin", "Sobre una alfombra.", "on_carpet"),
+        "G": Character("G", "Gilbert", "En el jardin.", "in_garden"),
+        "H": Character("H", "Holden", "Estaba solo.", "alone"),
+        "V": Character("V", "Violet", "Victima del asesino.", "victim"),
+    },
+    rooms={
+        "backyard": {
+            (0, 0),
+            (0, 1),
+            (0, 2),
+            (0, 6),
+            (1, 0),
+            (1, 1),
+            (1, 6),
+            (2, 0),
+            (2, 1),
+            (2, 3),
+            (2, 4),
+            (2, 5),
+            (2, 6),
+            (3, 0),
+            (3, 1),
+            (3, 2),
+            (3, 3),
+            (3, 4),
+            (3, 5),
+            (3, 6),
+            (3, 7),
+            (4, 3),
+            (5, 1),
+            (5, 2),
+            (5, 3),
+            (6, 0),
+            (6, 1),
+        },
+        "pond": {
+            (0, 3),
+            (0, 4),
+            (0, 5),
+            (1, 2),
+            (1, 3),
+            (1, 4),
+            (1, 5),
+            (2, 2),
+        },
+        "garden": {
+            (0, 7),
+            (0, 8),
+            (1, 7),
+            (1, 8),
+            (2, 7),
+            (2, 8),
+            (3, 8),
+        },
+        "shed": {
+            (4, 0),
+            (4, 1),
+            (4, 2),
+            (5, 0),
+        },
+        "sunroom": {
+            (4, 4),
+            (4, 5),
+            (4, 6),
+            (4, 7),
+            (4, 8),
+            (5, 4),
+            (5, 5),
+            (5, 6),
+            (5, 7),
+            (5, 8),
+        },
+        "bedroom": {
+            (6, 2),
+            (7, 0),
+            (7, 1),
+            (7, 2),
+            (8, 0),
+            (8, 1),
+            (8, 2),
+        },
+        "living_room": {
+            (6, 3),
+            (6, 4),
+            (6, 5),
+            (7, 3),
+            (7, 4),
+            (7, 5),
+            (8, 3),
+            (8, 4),
+            (8, 5),
+        },
+        "kitchen": {
+            (6, 6),
+            (6, 7),
+            (6, 8),
+            (7, 6),
+            (7, 7),
+            (7, 8),
+            (8, 6),
+            (8, 7),
+            (8, 8),
+        },
+    },
+    features={
+        "chair": {
+            (4, 6),
+            (4, 8),
+            (5, 4),
+            (8, 0),
+            (8, 4),
+        },
+        "carpet": {
+            (5, 5),
+            (5, 6),
+            (7, 2),
+            (8, 2),
+            (7, 6),
+            (7, 7),
+        },
+        "tree": {
+            (0, 1),
+            (2, 5),
+        },
+        "lily_pad": {
+            (0, 4),
+            (1, 2),
+        },
+        "flowers": {
+            (0, 8),
+            (2, 7),
+            (3, 0),
+            (3, 6),
+            (6, 1),
+        },
+        "shelf": {
+            (4, 0),
+            (6, 3),
+            (6, 5),
+            (8, 7),
+        },
+        "tv": {
+            (6, 4),
+        },
+        "table": {
+            (3, 8),
+            (4, 7),
+            (7, 1),
+            (7, 3),
+            (8, 8),
+        },
+    },
+    solution={
+        "A": (7, 5),
+        "B": (4, 1),
+        "C": (0, 0),
+        "D": (6, 2),
+        "E": (8, 4),
+        "F": (5, 6),
+        "G": (2, 8),
+        "H": (1, 3),
+        "V": (3, 7),
+    },
+    victim="V",
+    murderer="C",
+    blocked_cells={
+        (0, 1),
+        (2, 5),
+        (0, 4),
+        (1, 2),
+        (0, 8),
+        (2, 7),
+        (3, 0),
+        (3, 6),
+        (6, 1),
+        (4, 0),
+        (6, 3),
+        (6, 5),
+        (8, 7),
+        (6, 4),
+        (3, 8),
+        (4, 7),
+        (7, 1),
+        (7, 3),
+        (8, 8),
+    },
+)
+
+PUZZLES = [LEVEL_1, LEVEL_2, LEVEL_3]

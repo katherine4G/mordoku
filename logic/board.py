@@ -40,6 +40,9 @@ class BoardState:
         if not self.can_place(character_initial):
             return MoveResult(False, "Ese personaje ya fue colocado.")
 
+        if target_coordinate in self.puzzle.blocked_cells:
+            return MoveResult(False, "Esa casilla no se puede ocupar.")
+
         if self.puzzle.solution[character_initial] != target_coordinate:
             rejection_hint = hint_for_move(
                 self.puzzle,
