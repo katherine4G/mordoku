@@ -23,75 +23,129 @@ def font(size: int, bold: bool = False) -> pygame.font.Font:
 def draw_text(
     surface: pygame.Surface,
     text: str,
-    pos: tuple[int, int],
+    top_left_position: tuple[int, int],
     size: int = 24,
     color: Color = TEXT,
     bold: bool = False,
 ) -> pygame.Rect:
-    rendered = font(size, bold).render(text, True, color)
-    rect = rendered.get_rect(topleft=pos)
-    surface.blit(rendered, rect)
-    return rect
+    rendered_text = font(size, bold).render(text, True, color)
+    text_rect = rendered_text.get_rect(topleft=top_left_position)
+    surface.blit(rendered_text, text_rect)
+    return text_rect
 
 
 def draw_centered_text(
     surface: pygame.Surface,
     text: str,
-    rect: pygame.Rect,
+    target_rect: pygame.Rect,
     size: int = 24,
     color: Color = TEXT,
     bold: bool = False,
 ) -> pygame.Rect:
-    rendered = font(size, bold).render(text, True, color)
-    text_rect = rendered.get_rect(center=rect.center)
-    surface.blit(rendered, text_rect)
+    rendered_text = font(size, bold).render(text, True, color)
+    text_rect = rendered_text.get_rect(center=target_rect.center)
+    surface.blit(rendered_text, text_rect)
     return text_rect
 
 
 def draw_button(
     surface: pygame.Surface,
-    rect: pygame.Rect,
+    button_rect: pygame.Rect,
     label: str,
     selected: bool = False,
     disabled: bool = False,
 ) -> None:
-    color = PANEL_LIGHT if selected else PANEL
-    border = ACCENT if selected else LINE
+    fill_color = PANEL_LIGHT if selected else PANEL
+    border_color = ACCENT if selected else LINE
     if disabled:
-        color = (25, 27, 34)
-        border = (55, 59, 70)
-    pygame.draw.rect(surface, color, rect, border_radius=6)
-    pygame.draw.rect(surface, border, rect, width=2, border_radius=6)
-    draw_centered_text(surface, label, rect, 22, MUTED if disabled else TEXT, bold=selected)
+        fill_color = (25, 27, 34)
+        border_color = (55, 59, 70)
+    pygame.draw.rect(surface, fill_color, button_rect, border_radius=6)
+    pygame.draw.rect(surface, border_color, button_rect, width=2, border_radius=6)
+    draw_centered_text(
+        surface,
+        label,
+        button_rect,
+        22,
+        MUTED if disabled else TEXT,
+        bold=selected,
+    )
 
 
 def wrap_text(text: str, max_chars: int) -> list[str]:
-    words = text.split()
-    lines: list[str] = []
-    current = ""
-    for word in words:
-        candidate = word if not current else f"{current} {word}"
-        if len(candidate) <= max_chars:
-            current = candidate
+    text_words = text.split()
+    wrapped_lines: list[str] = []
+    current_line = ""
+    for word in text_words:
+        candidate_line = word if not current_line else f"{current_line} {word}"
+        if len(candidate_line) <= max_chars:
+            current_line = candidate_line
         else:
-            if current:
-                lines.append(current)
-            current = word
-    if current:
-        lines.append(current)
-    return lines
+            if current_line:
+                wrapped_lines.append(current_line)
+            current_line = word
+    if current_line:
+        wrapped_lines.append(current_line)
+    return wrapped_lines
+
+
+def wrap_text_to_width(
+    text: str,
+    max_width: int,
+    size: int = 20,
+    bold: bool = False,
+) -> list[str]:
+    text_font = font(size, bold)
+    wrapped_lines: list[str] = []
+    current_line = ""
+
+    for word in text.split():
+        candidate_line = word if not current_line else f"{current_line} {word}"
+        if text_font.size(candidate_line)[0] <= max_width:
+            current_line = candidate_line
+            continue
+
+        if current_line:
+            wrapped_lines.append(current_line)
+        current_line = word
+
+    if current_line:
+        wrapped_lines.append(current_line)
+    return wrapped_lines
 
 
 def draw_wrapped_text(
     surface: pygame.Surface,
     text: str,
-    pos: tuple[int, int],
+    top_left_position: tuple[int, int],
     max_chars: int,
     size: int = 20,
     color: Color = TEXT,
 ) -> int:
-    x, y = pos
-    for line in wrap_text(text, max_chars):
-        draw_text(surface, line, (x, y), size, color)
-        y += size + 6
-    return y
+    text_x, current_y = top_left_position
+    for wrapped_line in wrap_text(text, max_chars):
+        draw_text(surface, wrapped_line, (text_x, current_y), size, color)
+        current_y += size + 6
+    return current_y
+
+
+def draw_text_block(
+    surface: pygame.Surface,
+    text: str,
+    top_left_position: tuple[int, int],
+    max_width: int,
+    size: int = 20,
+    color: Color = TEXT,
+    bold: bool = False,
+    line_gap: int = 6,
+    max_lines: int | None = None,
+) -> int:
+    text_x, current_y = top_left_position
+    wrapped_lines = wrap_text_to_width(text, max_width, size, bold)
+    if max_lines is not None:
+        wrapped_lines = wrapped_lines[:max_lines]
+
+    for wrapped_line in wrapped_lines:
+        draw_text(surface, wrapped_line, (text_x, current_y), size, color, bold=bold)
+        current_y += size + line_gap
+    return current_y

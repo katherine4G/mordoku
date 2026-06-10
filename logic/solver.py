@@ -14,66 +14,82 @@ class CSPSolver:
         self.engine = ConstraintEngine(puzzle)
         self.initial_domains = build_initial_domains(puzzle, self.engine)
 
-    def domains_for(self, assignment: Assignment) -> Domains | None:
+    def domains_for(self, current_assignment: Assignment) -> Domains | None:
         return propagate_constraints(
             self.puzzle,
             self.engine,
-            dict(assignment),
+            dict(current_assignment),
             self.initial_domains,
         )
 
-    def is_consistent(self, assignment: Assignment) -> bool:
-        return self.engine.assignment_consistent(assignment)
+    def is_consistent(self, current_assignment: Assignment) -> bool:
+        return self.engine.assignment_consistent(current_assignment)
 
-    def has_solution(self, assignment: Assignment) -> bool:
-        domains = self.domains_for(assignment)
-        if domains is None:
+    def has_solution(self, current_assignment: Assignment) -> bool:
+        propagated_domains = self.domains_for(current_assignment)
+        if propagated_domains is None:
             return False
-        return self._backtrack(dict(assignment), domains) is not None
+        return self._backtrack(dict(current_assignment), propagated_domains) is not None
 
     def solve(self) -> Assignment | None:
-        domains = self.domains_for({})
-        if domains is None:
+        propagated_domains = self.domains_for({})
+        if propagated_domains is None:
             return None
-        return self._backtrack({}, domains)
+        return self._backtrack({}, propagated_domains)
 
-    def _backtrack(self, assignment: Assignment, domains: Domains) -> Assignment | None:
-        if len(assignment) == len(self.puzzle.characters):
-            return dict(assignment) if self.engine.assignment_consistent(assignment) else None
+    def _backtrack(
+        self,
+        current_assignment: Assignment,
+        current_domains: Domains,
+    ) -> Assignment | None:
+        if len(current_assignment) == len(self.puzzle.characters):
+            return (
+                dict(current_assignment)
+                if self.engine.assignment_consistent(current_assignment)
+                else None
+            )
 
-        initial = self._select_unassigned_variable(assignment, domains)
-        if initial is None:
+        next_character_initial = self._select_unassigned_variable(
+            current_assignment,
+            current_domains,
+        )
+        if next_character_initial is None:
             return None
 
-        for coord in sorted(domains[initial]):
-            tentative = dict(assignment)
-            tentative[initial] = coord
-            if not self.engine.assignment_consistent(tentative):
+        for candidate_coordinate in sorted(current_domains[next_character_initial]):
+            tentative_assignment = dict(current_assignment)
+            tentative_assignment[next_character_initial] = candidate_coordinate
+            if not self.engine.assignment_consistent(tentative_assignment):
                 continue
 
-            next_domains = propagate_constraints(
+            propagated_domains = propagate_constraints(
                 self.puzzle,
                 self.engine,
-                tentative,
-                domains,
+                tentative_assignment,
+                current_domains,
             )
-            if next_domains is None:
+            if propagated_domains is None:
                 continue
 
-            result = self._backtrack(tentative, next_domains)
-            if result is not None:
-                return result
+            solved_assignment = self._backtrack(tentative_assignment, propagated_domains)
+            if solved_assignment is not None:
+                return solved_assignment
 
         return None
 
     def _select_unassigned_variable(
         self,
-        assignment: Assignment,
-        domains: Domains,
+        current_assignment: Assignment,
+        current_domains: Domains,
     ) -> str | None:
-        candidates = [
-            initial for initial in self.puzzle.characters if initial not in assignment
+        unassigned_initials = [
+            character_initial
+            for character_initial in self.puzzle.characters
+            if character_initial not in current_assignment
         ]
-        if not candidates:
+        if not unassigned_initials:
             return None
-        return min(candidates, key=lambda initial: len(domains[initial]))
+        return min(
+            unassigned_initials,
+            key=lambda character_initial: len(current_domains[character_initial]),
+        )

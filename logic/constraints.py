@@ -14,117 +14,134 @@ class ConstraintEngine:
 
     def person_constraint_ok(
         self,
-        initial: str,
-        coord: Coord,
-        assignment: Assignment,
+        character_initial: str,
+        target_coordinate: Coord,
+        current_assignment: Assignment,
     ) -> bool:
-        character = self.puzzle.characters[initial]
-        rule = character.rule
+        character = self.puzzle.characters[character_initial]
+        character_rule = character.rule
 
-        if rule == "inside_car":
-            return self.puzzle.feature_at(coord, "car")
-        if rule == "on_oil":
-            return self.puzzle.feature_at(coord, "oil")
-        if rule == "inside_chair":
-            return self.puzzle.feature_at(coord, "chair")
-        if rule == "only_chair":
-            return self.puzzle.feature_at(coord, "chair")
-        if rule == "on_bed":
-            return self.puzzle.feature_at(coord, "bed")
-        if rule == "in_kitchen":
-            return self.puzzle.room_at(coord) == "kitchen"
-        if rule == "alone_waiting_room":
-            return self._diane_is_alone(coord, assignment)
-        if rule == "beside_shelf":
-            return self._beside_feature_in_same_room(coord, "shelf")
-        if rule == "beside_tv":
-            return self._beside_feature_in_same_room(coord, "tv")
-        if rule == "victim":
+        if character_rule == "inside_car":
+            return self.puzzle.feature_at(target_coordinate, "car")
+        if character_rule == "on_oil":
+            return self.puzzle.feature_at(target_coordinate, "oil")
+        if character_rule == "inside_chair":
+            return self.puzzle.feature_at(target_coordinate, "chair")
+        if character_rule == "only_chair":
+            return self.puzzle.feature_at(target_coordinate, "chair")
+        if character_rule == "on_bed":
+            return self.puzzle.feature_at(target_coordinate, "bed")
+        if character_rule == "in_kitchen":
+            return self.puzzle.room_at(target_coordinate) == "kitchen"
+        if character_rule == "alone_waiting_room":
+            return self._diane_is_alone(target_coordinate, current_assignment)
+        if character_rule == "beside_shelf":
+            return self._beside_feature_in_same_room(target_coordinate, "shelf")
+        if character_rule == "beside_tv":
+            return self._beside_feature_in_same_room(target_coordinate, "tv")
+        if character_rule == "victim":
             return True
         return True
 
-    def assignment_consistent(self, assignment: Assignment) -> bool:
-        if not self._rows_and_columns_are_unique(assignment):
+    def assignment_consistent(self, current_assignment: Assignment) -> bool:
+        if not self._rows_and_columns_are_unique(current_assignment):
             return False
-        if not self._exclusive_feature_rules_ok(assignment):
+        if not self._exclusive_feature_rules_ok(current_assignment):
             return False
 
-        for initial, coord in assignment.items():
-            if not self.person_constraint_ok(initial, coord, assignment):
+        for character_initial, assigned_coordinate in current_assignment.items():
+            if not self.person_constraint_ok(
+                character_initial,
+                assigned_coordinate,
+                current_assignment,
+            ):
                 return False
 
-        return self._victim_murderer_rule_ok(assignment)
+        return self._victim_murderer_rule_ok(current_assignment)
 
-    def _rows_and_columns_are_unique(self, assignment: Assignment) -> bool:
-        rows: set[int] = set()
-        cols: set[int] = set()
-        cells: set[Coord] = set()
+    def _rows_and_columns_are_unique(self, current_assignment: Assignment) -> bool:
+        occupied_rows: set[int] = set()
+        occupied_columns: set[int] = set()
+        occupied_coordinates: set[Coord] = set()
 
-        for coord in assignment.values():
-            row, col = coord
-            if row in rows or col in cols or coord in cells:
+        for assigned_coordinate in current_assignment.values():
+            board_row, board_col = assigned_coordinate
+            if (
+                board_row in occupied_rows
+                or board_col in occupied_columns
+                or assigned_coordinate in occupied_coordinates
+            ):
                 return False
-            rows.add(row)
-            cols.add(col)
-            cells.add(coord)
+            occupied_rows.add(board_row)
+            occupied_columns.add(board_col)
+            occupied_coordinates.add(assigned_coordinate)
         return True
 
-    def _diane_is_alone(self, coord: Coord, assignment: Assignment) -> bool:
-        if self.puzzle.room_at(coord) != "waiting_room":
+    def _diane_is_alone(self, target_coordinate: Coord, current_assignment: Assignment) -> bool:
+        if self.puzzle.room_at(target_coordinate) != "waiting_room":
             return False
-        for other_initial, other_coord in assignment.items():
-            if other_initial != "D" and self.puzzle.room_at(other_coord) == "waiting_room":
+        for other_character_initial, other_coordinate in current_assignment.items():
+            if (
+                other_character_initial != "D"
+                and self.puzzle.room_at(other_coordinate) == "waiting_room"
+            ):
                 return False
         return True
 
-    def _beside_feature_in_same_room(self, coord: Coord, feature: str) -> bool:
-        room = self.puzzle.room_at(coord)
-        if room is None:
+    def _beside_feature_in_same_room(self, target_coordinate: Coord, feature_name: str) -> bool:
+        current_room = self.puzzle.room_at(target_coordinate)
+        if current_room is None:
             return False
 
-        row, col = coord
+        board_row, board_col = target_coordinate
         orthogonal_neighbors = {
-            (row - 1, col),
-            (row + 1, col),
-            (row, col - 1),
-            (row, col + 1),
+            (board_row - 1, board_col),
+            (board_row + 1, board_col),
+            (board_row, board_col - 1),
+            (board_row, board_col + 1),
         }
-        for neighbor in orthogonal_neighbors:
-            if self.puzzle.room_at(neighbor) == room and self.puzzle.feature_at(neighbor, feature):
+        for neighbor_coordinate in orthogonal_neighbors:
+            if (
+                self.puzzle.room_at(neighbor_coordinate) == current_room
+                and self.puzzle.feature_at(neighbor_coordinate, feature_name)
+            ):
                 return True
         return False
 
-    def _exclusive_feature_rules_ok(self, assignment: Assignment) -> bool:
-        only_chair_initials = {
-            initial
-            for initial, character in self.puzzle.characters.items()
+    def _exclusive_feature_rules_ok(self, current_assignment: Assignment) -> bool:
+        chair_only_initials = {
+            character_initial
+            for character_initial, character in self.puzzle.characters.items()
             if character.rule == "only_chair"
         }
-        if not only_chair_initials:
+        if not chair_only_initials:
             return True
 
-        for initial, coord in assignment.items():
-            if self.puzzle.feature_at(coord, "chair") and initial not in only_chair_initials:
+        for character_initial, assigned_coordinate in current_assignment.items():
+            if (
+                self.puzzle.feature_at(assigned_coordinate, "chair")
+                and character_initial not in chair_only_initials
+            ):
                 return False
         return True
 
-    def _victim_murderer_rule_ok(self, assignment: Assignment) -> bool:
-        victim = self.puzzle.victim
-        murderer = self.puzzle.murderer
+    def _victim_murderer_rule_ok(self, current_assignment: Assignment) -> bool:
+        victim_initial = self.puzzle.victim
+        murderer_initial = self.puzzle.murderer
 
-        if victim not in assignment:
+        if victim_initial not in current_assignment:
             return True
 
-        victim_room = self.puzzle.room_at(assignment[victim])
+        victim_room = self.puzzle.room_at(current_assignment[victim_initial])
         if victim_room is None:
             return False
 
-        for initial, coord in assignment.items():
-            if initial in {victim, murderer}:
+        for character_initial, assigned_coordinate in current_assignment.items():
+            if character_initial in {victim_initial, murderer_initial}:
                 continue
-            if self.puzzle.room_at(coord) == victim_room:
+            if self.puzzle.room_at(assigned_coordinate) == victim_room:
                 return False
 
-        if murderer in assignment:
-            return self.puzzle.room_at(assignment[murderer]) == victim_room
+        if murderer_initial in current_assignment:
+            return self.puzzle.room_at(current_assignment[murderer_initial]) == victim_room
         return True

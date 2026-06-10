@@ -28,16 +28,20 @@ class Puzzle:
     murderer: str
 
     def all_cells(self) -> set[Coord]:
-        return {(row, col) for row in range(self.size) for col in range(self.size)}
+        return {
+            (board_row, board_col)
+            for board_row in range(self.size)
+            for board_col in range(self.size)
+        }
 
-    def room_at(self, coord: Coord) -> str | None:
-        for room, cells in self.rooms.items():
-            if coord in cells:
-                return room
+    def room_at(self, board_coordinate: Coord) -> str | None:
+        for room_name, room_cells in self.rooms.items():
+            if board_coordinate in room_cells:
+                return room_name
         return None
 
-    def feature_at(self, coord: Coord, feature: str) -> bool:
-        return coord in self.features.get(feature, set())
+    def feature_at(self, board_coordinate: Coord, feature_name: str) -> bool:
+        return board_coordinate in self.features.get(feature_name, set())
 
 
 ROOT = Path(__file__).resolve().parents[1]
