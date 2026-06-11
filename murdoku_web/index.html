@@ -1,0 +1,105 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Murdoku Web</title>
+    <link rel="stylesheet" href="css/styles.css">
+  </head>
+  <body>
+    <main class="app">
+      <section id="menuScreen" class="screen menu-screen is-active" aria-labelledby="menuTitle">
+        <div class="menu-overlay">
+          <p class="menu-kicker">Sudoku + caso detectivesco</p>
+          <h1 id="menuTitle">MURDOKU</h1>
+          <div class="menu-actions" aria-label="Menu principal">
+            <button id="playButton" class="primary-action" type="button">Jugar</button>
+            <button id="rulesButton" type="button">Reglas</button>
+          </div>
+        </div>
+      </section>
+
+      <section id="rulesScreen" class="screen rules-screen" aria-labelledby="rulesTitle">
+        <div class="topbar">
+          <button id="rulesBackButton" type="button">Menu</button>
+          <h2 id="rulesTitle">Reglas</h2>
+        </div>
+        <div class="rules-content">
+          <p>Cada personaje ocupa una unica casilla de la matriz.</p>
+          <p>No puede repetirse fila ni columna. Cuando una letra es correcta, su fila y columna quedan marcadas.</p>
+          <p>Los movimientos son solo arriba, abajo, izquierda o derecha. Nunca diagonales, y deben estar dentro de la misma habitacion.</p>
+          <p>El asesino es el unico personaje que queda a solas con la victima en la misma habitacion.</p>
+          <p>El tablero ilustrado funciona como referencia visual del caso.</p>
+        </div>
+      </section>
+
+      <section id="gameScreen" class="screen game-screen" aria-labelledby="caseTitle">
+        <header class="topbar game-topbar">
+          <button id="menuButton" type="button">Menu</button>
+          <div class="case-heading">
+            <h2 id="caseTitle"></h2>
+            <p id="caseSummary"></p>
+          </div>
+          <div class="level-tools">
+            <label for="levelSelect">Caso</label>
+            <select id="levelSelect"></select>
+            <button id="resetButton" type="button">Reiniciar</button>
+          </div>
+        </header>
+
+        <div class="game-layout">
+          <section class="left-column" aria-label="Informacion del caso">
+            <div class="reference-panel">
+              <div class="panel-heading">
+                <h3>Referencia visual</h3>
+                <span id="levelCounter"></span>
+              </div>
+              <img id="caseImage" alt="Referencia visual del caso">
+            </div>
+
+            <div class="characters-panel">
+              <div class="panel-heading">
+                <h3>Personajes</h3>
+                <button id="clearButton" class="small-button" type="button">Borrar celda</button>
+              </div>
+              <div id="characterButtons" class="character-buttons"></div>
+            </div>
+
+            <div class="clues-panel">
+              <h3>Pistas del caso</h3>
+              <div id="clueList" class="clue-list"></div>
+            </div>
+          </section>
+
+          <section class="right-column" aria-label="Tablero">
+            <div class="board-panel">
+              <div class="panel-heading">
+                <h3>Detective, toma nota aqui</h3>
+                <span id="selectedText"></span>
+              </div>
+              <div id="boardRoot" class="board-root"></div>
+            </div>
+
+            <div id="messageBox" class="message-box" role="status" aria-live="polite"></div>
+
+            <form id="answerForm" class="answer-panel" autocomplete="off">
+              <label for="murdererInput">Quien es el asesino?</label>
+              <div class="answer-row">
+                <input id="murdererInput" name="murderer" type="text" maxlength="24" placeholder="Nombre">
+                <button id="submitAnswerButton" type="submit">Validar</button>
+              </div>
+              <div id="answerMessage" class="answer-message"></div>
+              <button id="nextLevelButton" class="primary-action" type="button">Siguiente caso</button>
+            </form>
+          </section>
+        </div>
+      </section>
+    </main>
+
+    <script src="js/levels.js"></script>
+    <script src="js/gameState.js"></script>
+    <script src="js/board.js"></script>
+    <script src="js/ui.js"></script>
+    <script src="js/main.js"></script>
+  </body>
+</html>
